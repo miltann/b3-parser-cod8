@@ -66,6 +66,32 @@ class Cod8Parser(b3.parsers.cod6.Cod6Parser):
     #                                                                                                                  #
     ####################################################################################################################
 
+    _guidLength = 16
+    _commands = {
+        'message': 'tell %(cid)s %(message)s',
+        'say': 'say %(message)s',
+        'set': 'set %(name)s "%(value)s"',
+        'kick': 'dropclient %(cid)s "%(reason)s"',
+        'ban': 'banclient %(cid)s "%(reason)s"',
+        'unban': 'unban %(guid)s',
+        'tempban': 'tempbanclient %(cid)s "%(reason)s"'
+    }
+
+    _regPlayer = re.compile(r'(?P<slot>[0-9]+)\s+'
+                            r'(?P<score>[0-9-]+)\s+'
+                            r'(?P<ping>[0-9]+)\s+'
+                            r'(?P<guid>[a-z0-9]+)\s+'
+                            r'(?P<name>.*?)\s+'
+                            r'(?P<last>[0-9]+)\s+'
+                            r'(?P<ip>[0-9.]+):'
+                            r'(?P<port>[0-9-]+)', re.IGNORECASE)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #   PARSER INITIALIZATION                                                                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
+
     def startup(self):
         """
         Called after the parser is created before run().
@@ -83,6 +109,6 @@ class Cod8Parser(b3.parsers.cod6.Cod6Parser):
         if not client or not client.guid:
             return
 
-        self.output.write('unban %s' % client.guid)
+        self.write(self.getCommand('unban', guid=client.guid, reason=reason))
         if admin:
-            admin.message('Unbanned: removed %s guid from banlist' % client.exactName)
+            admin.message('Removed ban for %s from banlist.' % client.exactName)
